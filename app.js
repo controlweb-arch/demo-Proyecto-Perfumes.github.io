@@ -1,0 +1,70 @@
+const API_URL = "https://script.google.com/macros/s/AKfycbxcMGaKgOwwS8QuFKx_pzVB2y0vHtLkOnU5Rq83_HzOedchopiCRadp9vtxrvxQEczxTA/exec";
+const WHATSAPP = "59898643182"; 
+
+const grid = document.getElementById("productos");
+const filtro = document.getElementById("filtro");
+
+let productos = [];
+
+fetch(API_URL)
+  .then(res => res.json())
+  .then(data => {
+    productos = data;
+    renderProductos(data);
+    cargarFiltros(data);
+  })
+  .catch(err => console.error("Error cargando productos:", err));
+
+function renderProductos(lista) {
+  grid.innerHTML = "";
+
+  lista.forEach(p => {
+    const msg = encodeURIComponent(
+      `Hola! Quiero pedir:\n\n${p.marca} ${p.nombre}\nPrecio: $${p.precio}`
+    );
+
+    grid.innerHTML += `
+      <div class="card">
+
+        <div class="img-box">
+          <img src="${p.imagen}" alt="${p.nombre}">
+        </div>
+
+        <div class="content">
+          <h3>${p.marca}</h3>
+          <h2>${p.nombre}</h2>
+          <p>${p.descripcion}</p>
+        </div>
+
+        <div class="actions">
+          <div class="price">$${p.precio}</div>
+          <a class="btn"
+             href="https://wa.me/${WHATSAPP}?text=${msg}"
+             target="_blank">
+             Pedir por WhatsApp
+          </a>
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+
+function cargarFiltros(data) {
+  // Obtenemos géneros únicos
+  const categorias = [...new Set(data.map(p => p.genero))].filter(Boolean);
+
+  categorias.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    filtro.appendChild(option);
+  });
+
+  filtro.addEventListener("change", () => {
+    const valor = filtro.value;
+    const filtrados = valor ? productos.filter(p => p.genero === valor) : productos;
+    renderProductos(filtrados);
+  });
+}
